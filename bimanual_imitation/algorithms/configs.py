@@ -9,6 +9,7 @@ class ALG(Enum):
     GAIL = "gail"
     EXPERT = "expert"
     DIFFUSION = "diffusion"
+    DIFFUSION_STATE = "diffusion_state"
     ACT = "act"
 
 
@@ -111,6 +112,19 @@ class DiffusionParamConfig:
 
 
 @dataclass(frozen=True)
+class DiffusionStateParamConfig:
+    batch_size: int = 512
+    num_diffusion_iters: int = 100
+    opt_learning_rate: float = 1.0e-4
+    opt_weight_decay: float = 1.0e-6
+    lr_scheduler: str = "cosine"
+    lr_warmup_steps: int = 500
+    obs_horizon: int = 4
+    action_horizon: int = 4
+    pred_horizon: int = 8
+
+
+@dataclass(frozen=True)
 class ActParamConfig:
     batch_size: int = 256
     enc_layers: int = 1
@@ -137,6 +151,7 @@ def get_param_config(alg: ALG):
         ALG.BCLONE: BcloneParamConfig,
         ALG.DAGGER: DaggerParamConfig,
         ALG.DIFFUSION: DiffusionParamConfig,
+        ALG.DIFFUSION_STATE: DiffusionStateParamConfig,
         ALG.ACT: ActParamConfig,
     }
     return param_cfgs[alg]

@@ -85,7 +85,7 @@ def normalize_data(data, stats):
         ndata = data
     elif stats["type"] == StatsType.NORMALIZE:
         # nomalize to [0,1]
-        ndata = (data - stats["min"]) / (stats["max"] - stats["min"])
+        ndata = (data - stats["min"]) / (stats["max"] - stats["min"] + 1e-8)
         # normalize to [-1, 1]
         ndata = ndata * 2 - 1
     else:
@@ -99,7 +99,7 @@ def unnormalize_data(ndata, stats):
         data = ndata
     elif stats["type"] == StatsType.NORMALIZE:
         ndata = (ndata + 1) / 2
-        data = ndata * (stats["max"] - stats["min"]) + stats["min"]
+        data = ndata * (stats["max"] - stats["min"] + 1e-8) + stats["min"]
     else:
         raise ValueError("Invalid stats type")
     return data
