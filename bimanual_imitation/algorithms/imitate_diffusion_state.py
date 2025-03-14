@@ -23,7 +23,7 @@ from bimanual_imitation.constants import TEST_RESULTS_DIR
 
 class ImitateDiffusionState(ImitateBcBase):
 
-    def __init__(self, task_name):
+    def __init__(self, task_name, absolute):
         self.task_name = task_name
         super().__init__()
 
@@ -97,6 +97,11 @@ class ImitateDiffusionState(ImitateBcBase):
             limit_trajs=self.limit_trajs,
             normalize=True,
         )
+
+        # Save out stats for normalization/unnormalization
+        # if not os.path.exists(str(TEST_RESULTS_DIR / self.alg.value / self.task_name)):
+        #     os.makedirs(str(TEST_RESULTS_DIR / self.alg.value / self.task_name))
+        # np.savez(str(TEST_RESULTS_DIR / self.alg.value / self.task_name) + '/stats.npz', **self.train_dataset.stats)
 
         self._train_dataloader = DataLoader(
             dataset=self._train_dataset,
@@ -232,10 +237,10 @@ class ImitateDiffusionState(ImitateBcBase):
         diffusion_defaults = {
             "--mode": ("train_policy", str),
             "--export_dir": (str(TEST_RESULTS_DIR / self.alg.value / self.task_name), str),
-            "--max_iter": (30, int),
+            "--max_iter": (50, int),
             "--num_evals": (0, int),
             "--num_rollouts_per_eval": (0, int),
-            "--snapshot_save_freq": (3, int),
+            "--snapshot_save_freq": (5, int),
             "--print_freq": (1, int),
             "--limit_trajs": (30, int),
             "--export_data": (True, bool),
@@ -247,6 +252,7 @@ class ImitateDiffusionState(ImitateBcBase):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Imitate Diffusion State")
     parser.add_argument("--task_name", type=str, required=True, default="snackbox_push")
+    parser.add_argument("--absolute", type=bool, default=False)
     args = parser.parse_args()
 
-    ImitateDiffusionState(args.task_name).run()
+    ImitateDiffusionState(args.task_name, args.absolute).run()
