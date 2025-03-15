@@ -167,3 +167,4 @@ results
 test_results
 *.proto
 *.sh
+*_test.py
