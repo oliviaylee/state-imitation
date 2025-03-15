@@ -23,7 +23,7 @@ from bimanual_imitation.constants import TEST_RESULTS_DIR
 
 class ImitateDiffusionState(ImitateBcBase):
 
-    def __init__(self, task_name, absolute):
+    def __init__(self, task_name):
         self.task_name = task_name
         super().__init__()
 
@@ -98,10 +98,12 @@ class ImitateDiffusionState(ImitateBcBase):
             normalize=True,
         )
 
-        # Save out stats for normalization/unnormalization
-        # if not os.path.exists(str(TEST_RESULTS_DIR / self.alg.value / self.task_name)):
-        #     os.makedirs(str(TEST_RESULTS_DIR / self.alg.value / self.task_name))
-        # np.savez(str(TEST_RESULTS_DIR / self.alg.value / self.task_name) + '/stats.npz', **self.train_dataset.stats)
+        if not os.path.exists(str(TEST_RESULTS_DIR / self.alg.value / self.task_name)):
+            os.makedirs(str(TEST_RESULTS_DIR / self.alg.value / self.task_name))
+
+        # Save out stats for normalization/unnormalization - don't overwrite if it exists
+        if not os.path.exists(str(TEST_RESULTS_DIR / self.alg.value / self.task_name) + '/stats.npz'):
+            np.savez(str(TEST_RESULTS_DIR / self.alg.value / self.task_name) + '/stats.npz', **self.train_dataset.stats)
 
         self._train_dataloader = DataLoader(
             dataset=self._train_dataset,
@@ -252,7 +254,6 @@ class ImitateDiffusionState(ImitateBcBase):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Imitate Diffusion State")
     parser.add_argument("--task_name", type=str, required=True, default="snackbox_push")
-    parser.add_argument("--absolute", type=bool, default=False)
     args = parser.parse_args()
 
-    ImitateDiffusionState(args.task_name, args.absolute).run()
+    ImitateDiffusionState(args.task_name).run()

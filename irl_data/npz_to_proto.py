@@ -35,7 +35,7 @@ def set_robot_state(robot, q: np.ndarray) -> None:
         else:
             p.resetJointState(robot, joint_idx, 0)
 
-def load_npzs_as_trajs(npz_files, obs_dim=46, action_dim=23):
+def load_npzs_as_trajs(npz_files, absolute=False, obs_dim=46, action_dim=23):
     """
     Load data from npz file, ensuring correct tensor shapes
     
@@ -76,6 +76,8 @@ def load_npzs_as_trajs(npz_files, obs_dim=46, action_dim=23):
             D = 15 # We want one waypoint every 0.5 seconds
             waypoint = min(((i // D) + 1) * D, T-1)
             curr_action = joint_angles[waypoint] - joint_angles[i]
+            if absolute:
+                curr_action = joint_angles[waypoint]
             assert curr_action.shape[0] == action_dim, f"curr_action.shape: {curr_action.shape}"
             actions_np.append(np.array(curr_action))
     
@@ -126,6 +128,7 @@ def setup_expert_trajectories_dir():
 def main():
     parser = argparse.ArgumentParser(description="Convert NPZ files to proto format for imitation learning")
     parser.add_argument("--task_name", type=str, required=True, default="snackbox_push", help="Path(s) to the NPZ file(s)")
+    parser.add_argument("--absolute", type=bool, default=False, help="Compute absolute instead of delta actions")
     parser.add_argument("--output_dir", type=str, default=None, help="Directory to save the proto file(s). Defaults to IRL_DATA_BASE_DIR/expert_trajectories/")
     parser.add_argument("--validation_split", type=float, default=0.0, help="Fraction of trajectories to use for validation (0.0 to 1.0)")
     parser.add_argument("--seed", type=int, default=0, help="Random seed for shuffling")
@@ -149,16 +152,20 @@ def main():
     
     # Determine output file paths
     train_proto_file = output_dir / f"{args.task_name}.proto"
+    if args.absolute:
+        train_proto_file = output_dir / f"{args.task_name}_absolute.proto"
     val_proto_file = None
     
     if args.validation_split > 0:
         val_proto_file = output_dir.parent / "expert_validation_trajectories" / f"{args.env_name}.proto"
+        if args.absolute:
+            val_proto_file = output_dir.parent / "expert_validation_trajectories" / f"{args.env_name}_absolute.proto"
         # Create validation directory if needed
         if not os.path.exists(os.path.dirname(val_proto_file)):
             os.makedirs(os.path.dirname(val_proto_file))
     
     # Process all NPZ files
-    all_trajectories = load_npzs_as_trajs(npz_files)
+    all_trajectories = load_npzs_as_trajs(npz_files, args.absolute)
     print(f"Loaded {len(all_trajectories)} trajectories")
     
     # If we have multiple NPZ files or need a validation split, we need to recreate the proto file

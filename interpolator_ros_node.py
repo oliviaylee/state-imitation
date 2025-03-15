@@ -9,7 +9,7 @@ from sensor_msgs.msg import JointState
 NUM_ARM_JOINTS = 7
 NUM_HAND_JOINTS = 16
 INTERPOLATION_DT = 1 / 5  # Time to fully interpolate to the new target
-MAX_DT_COMMAND_SEC = 0.5       # Max time to wait for new commands before stopping
+MAX_DT_COMMAND_SEC = 20       # Max time to wait for new commands before stopping
 PUBLISH_RATE = 200             # Publish at 200 Hz
 
 

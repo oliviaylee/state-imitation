@@ -222,6 +222,7 @@ class ConditionalUnet1D(nn.Module):
         output: (B,T,input_dim)
         """
         # (B,T,C)
+        B, T, C = sample.shape
         sample = sample.moveaxis(-1, -2)
         # (B,C,T)
 
@@ -246,7 +247,8 @@ class ConditionalUnet1D(nn.Module):
             x = resnet(x, global_feature)
             x = resnet2(x, global_feature)
             h.append(x)
-            x = downsample(x)
+            if T > 1:
+                x = downsample(x)
 
         for mid_module in self.mid_modules:
             x = mid_module(x, global_feature)
@@ -255,7 +257,8 @@ class ConditionalUnet1D(nn.Module):
             x = torch.cat((x, h.pop()), dim=1)
             x = resnet(x, global_feature)
             x = resnet2(x, global_feature)
-            x = upsample(x)
+            if T > 1:
+                x = upsample(x)
 
         x = self.final_conv(x)
 

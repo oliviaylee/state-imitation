@@ -92,7 +92,7 @@ class PolicyInferenceNode:
         # ------------------------------
         # Set up inference rate
         # ------------------------------
-        self.rate_hz = 1  # HARDCODED
+        self.rate_hz = 30  # HARDCODED
         self.rate = rospy.Rate(self.rate_hz)
 
         # ------------------------------
@@ -160,7 +160,7 @@ class PolicyInferenceNode:
         )
 
         # Create policy and initialize
-        self.policy = ImitateDiffusionState(task_name=self.task_name, absolute=True)
+        self.policy = ImitateDiffusionState(task_name=self.task_name)
         self.policy.run = lambda: None  # Override run method
         self.policy.env_name = "quad_insert_a0o0"
         self.policy.init_params(config)
@@ -188,8 +188,9 @@ class PolicyInferenceNode:
         # ------------------------------
         # Publishers
         # ------------------------------
-        self.iiwa_cmd_pub = rospy.Publisher("/iiwa/joint_cmd", JointState, queue_size=10)
-        self.allegro_cmd_pub = rospy.Publisher("/allegroHand_0/joint_cmd", JointState, queue_size=10)
+        # self.iiwa_cmd_pub = rospy.Publisher("/iiwa/joint_cmd", JointState, queue_size=10)
+        # self.allegro_cmd_pub = rospy.Publisher("/allegroHand_0/joint_cmd", JointState, queue_size=10)
+        self.raw_targets_pub = rospy.Publisher("/raw_targets", JointState, queue_size=10)
 
         # ------------------------------
         # Subscribers (storing messages in buffers)
@@ -350,19 +351,25 @@ class PolicyInferenceNode:
             for i in range(self.PRED_HORIZON):
                 current_time = rospy.Time.now()
 
-                # KUKA
-                iiwa_cmd_msg = JointState()
-                iiwa_cmd_msg.header = Header(stamp=current_time)
-                iiwa_cmd_msg.name = [f"iiwa_joint_{i+1}" for i in range(7)]
-                iiwa_cmd_msg.position = new_iiwa_q[i].tolist()
-                self.iiwa_cmd_pub.publish(iiwa_cmd_msg)
+                # # KUKA
+                # iiwa_cmd_msg = JointState()
+                # iiwa_cmd_msg.header = Header(stamp=current_time)
+                # iiwa_cmd_msg.name = [f"iiwa_joint_{i+1}" for i in range(7)]
+                # iiwa_cmd_msg.position = new_iiwa_q[i].tolist()
+                # self.iiwa_cmd_pub.publish(iiwa_cmd_msg)
 
-                # Allegro
-                allegro_cmd_msg = JointState()
-                allegro_cmd_msg.header = Header(stamp=current_time)
-                allegro_cmd_msg.name = [f"allegro_joint_{i}" for i in range(16)]
-                allegro_cmd_msg.position = new_allegro_q[i].tolist()
-                self.allegro_cmd_pub.publish(allegro_cmd_msg)
+                # # Allegro
+                # allegro_cmd_msg = JointState()
+                # allegro_cmd_msg.header = Header(stamp=current_time)
+                # allegro_cmd_msg.name = [f"allegro_joint_{i}" for i in range(16)]
+                # allegro_cmd_msg.position = new_allegro_q[i].tolist()
+                # self.allegro_cmd_pub.publish(allegro_cmd_msg)
+
+                raw_targets_msg = JointState()
+                raw_targets_msg.header = Header(stamp=current_time)
+                raw_targets_msg.name = [f"iiwa_joint_{i+1}" for i in range(7)] + [f"allegro_joint_{i}" for i in range(16)]
+                raw_targets_msg.position = new_q[i].tolist()
+                self.raw_targets_pub.publish(raw_targets_msg)
 
                 self.update_observation_buffer()
                 time.sleep(1/self.rate_hz)
